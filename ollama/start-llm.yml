@@ -1,0 +1,50 @@
+version: '3'
+services:
+  ipex-llm:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: ollama:240623
+    container_name: ipex-llm
+    environment:
+      NEOReadDebugKeys: 1
+      OverrideGpuAddressSpace: 48
+      DEVICE: Arc
+      no_proxy: localhost,127.0.0.1
+      
+    working_dir: /llm/scripts/
+    volumes:
+      - /home/dev/Project/llm/.ollama:/root/.ollama
+    command: /bin/bash -c "source ipex-llm-init --gpu --device $DEVICE && bash start-ollama.sh"
+
+    devices:
+      - '/dev/dri'
+    network_mode: host
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    depends_on:
+      - ipex-llm
+      - searxng
+    volumes:
+      - /home/dev/Project/llm/openwebui/data:/app/backend/data
+    environment:
+      PORT: 3000
+      ENABLE_RAG_WEB_SEARCH: True
+      RAG_WEB_SEARCH_ENGINE: "searxng"
+      RAG_WEB_SEARCH_RESULT_COUNT: 3
+      RAG_WEB_SEARCH_CONCURRENT_REQUESTS: 10
+      SEARXNG_QUERY_URL: "http://localhost:8080/search?q=<query>"
+      local_files_only: False
+    network_mode: host
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./searxng:/etc/searxng
+    restart: always
+    network_mode: host

@@ -1,0 +1,23 @@
+version: '3'
+services:
+  sd:
+    image: sd:240622
+      
+    environment:
+      - NEOReadDebugKeys=1 
+      - OverrideGpuAddressSpace=48
+    
+    workspace:
+      - /app
+      
+    volumes:
+      - /home/dev/Project/stable-diffusion/models:/app/models
+
+    devices:
+      - '/dev/dri'
+
+    network_mode: host
+
+    command: bash /app/start.sh
+
+     e
