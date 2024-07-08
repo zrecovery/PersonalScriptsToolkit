@@ -1,0 +1,61 @@
+version: "3.8"
+services:
+  cloudreve:
+    container_name: cloudreve
+    image: cloudreve/cloudreve:latest
+    restart: unless-stopped
+    networks:
+      - redisnet
+      - dbnet
+    ports:
+      - "5212:5212"
+    volumes:
+      - ${CLOUDREVE_TEMP_DATA}:/data
+      - ${CLOUDREVE_UPLOAD}:/cloudreve/uploads
+      - ${CLOUDREVE_CONF}:/cloudreve/conf.ini
+      - ${CLOUDREVE_DB}:/cloudreve/cloudreve.db
+      - ${CLOUDREVE_AVATAR}:/cloudreve/avatar
+      - /run/media/dev/x/data:/main_data
+    depends_on:
+      - aria2
+
+  aria2:
+    container_name: aria2
+    image: p3terx/aria2-pro
+    restart: unless-stopped
+    environment:
+      - RPC_SECRET=your_aria_rpc_token
+      - RPC_PORT=6800
+    volumes:
+      - ${ARRIA2_CONF}:/config
+      - ${CLOUDREVE_TEMP_DATA}:/data
+
+  db:
+    container_name: db
+    image: groonga/pgroonga:latest
+    
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PW}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ${POSTGRES_DATA}:/var/lib/postgresql/data
+    networks:
+      - dbnet
+    ports:
+      - "5433:5432"
+    restart: always
+
+  redis:
+    container_name: redis
+    image: redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PW}
+    networks:
+      - redisnet
+    expose:
+      - 6379
+networks:
+  dbnet:
+  redisnet:

@@ -1,0 +1,27 @@
+services:
+  postgres:
+    container_name: postgres
+    image: groonga/pgroonga:latest
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PW}
+      - POSTGRES_DB=${POSTGRES_DB} #optional (specify default database instead of $POSTGRES_DB)
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ${POSTGRES_DATA}:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_MAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PW}
+    volumes:
+      - ${PGADMIN_DATA}/preferences.json:/pgadmin4/preferences.json
+      - ${PGADMIN_DATA}/servers.json:/pgadmin4/servers.json
+    ports:
+      - "5050:80"
+    restart: always
